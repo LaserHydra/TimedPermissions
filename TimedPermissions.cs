@@ -9,7 +9,7 @@ using System;
 
 namespace Oxide.Plugins
 {
-    [Info("Timed Permissions", "LaserHydra", "1.6.0")]
+    [Info("Timed Permissions", "LaserHydra", "1.6.1")]
     [Description("Allows you to grant permissions or groups for a specific time")]
     class TimedPermissions : CovalencePlugin
     {
@@ -147,6 +147,32 @@ namespace Oxide.Plugins
 
             information.RemovePermission(args[1].ToLower());
         }
+
+        [Command("addactive"), Permission(AdminPermission)]
+        private void CmdAddActive(IPlayer player, string cmd, string[] args)
+        {
+            if (args.Length != 2)
+            {
+                player.Reply(GetMessage("Syntax : addactive", player.Id));
+                return;
+            }
+
+            TimeSpan duration;
+            
+            if (!TryParseTimeSpan(args[1], out duration))
+            {
+                player.Reply(GetMessage("Invalid Time Format", player.Id));
+                return;
+            }
+
+            foreach (var target in players.Connected)
+            {
+                target.Reply(GetMessage("Add Active Message", target.Id).Replace("{group}",args[0]));
+                PlayerInformation.GetOrCreate(target).AddGroup(args[0], DateTime.UtcNow + duration);
+            }
+            
+        }
+        
 
         [Command("addgroup"), Permission(AdminPermission)]
         private void CmdAddGroup(IPlayer player, string cmd, string[] args)
@@ -374,7 +400,9 @@ namespace Oxide.Plugins
                 ["Syntax : grantperm"] = "Syntax: removegroup <player|steamid> <group>",
                 ["Syntax : removegroup"] = "Syntax: removegroup <player|steamid> <group>",
                 ["Syntax : addgroup"] = "Syntax: addgroup <player|steamid> <group> <time Ex: 1d12h30m>",
+                ["Syntax : addactive"] = "Syntax: addactive <group> <time Ex: 1d12h30m>",
                 ["Syntax : resetaccess"] = "Syntax: timedpermissions_resetaccess [yes]",
+                ["Add Active Message"] = "All Active Players have been added to {group} for a limited time.",
 
             }, this);
         }
